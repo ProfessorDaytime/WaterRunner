@@ -1,0 +1,4 @@
+repository "WaterRunner@thesx88@cloud"
+  path "/"
+    br "/main"
+    co "/main"
