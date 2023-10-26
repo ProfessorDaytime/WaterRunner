@@ -138,7 +138,7 @@ GameObject:
   - component: {fileID: 144037426}
   m_Layer: 0
   m_Name: Stairs001 (1)
-  m_TagString: Untagged
+  m_TagString: Footsteps/WOOD
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -208,7 +208,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c22777d6e868e4f2fb421913386b154e, type: 2}
+  - {fileID: 2100000, guid: 2782fdb8a9edfcf44be1e20db0808f5e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1496,6 +1496,7 @@ GameObject:
   - component: {fileID: 611438744}
   - component: {fileID: 611438745}
   - component: {fileID: 611438746}
+  - component: {fileID: 611438747}
   m_Layer: 0
   m_Name: FirstPersonController
   m_TagString: Untagged
@@ -1564,6 +1565,7 @@ MonoBehaviour:
   willSlideOnSlopes: 1
   canZoom: 1
   canInteract: 1
+  useFootsteps: 0
   sprintKey: 304
   jumpKey: 32
   crouchKey: 306
@@ -1577,6 +1579,10 @@ MonoBehaviour:
   lookSpeedY: 2
   upperLookLimit: 80
   lowerLookLimit: 80
+  maxHealth: 100
+  timeBeforeRegenStarts: 3
+  healthValueIncrement: 1
+  healthTimeIncrement: 0.1
   jumpForce: 8
   gravity: 30
   crouchingHeight: 0.5
@@ -1592,11 +1598,120 @@ MonoBehaviour:
   crouchBobAmount: 0.025
   timeToZoom: 0.3
   zoomFOV: 30
+  baseStepSpeed: 0.5
+  crouchStepMultiplier: 1.5
+  sprintStepMultiplier: 0.6
+  footstepAudioSource: {fileID: 611438747}
+  woodClips:
+  - {fileID: 8300000, guid: b367cae6636854549ba6afb7d73ddf5e, type: 3}
+  - {fileID: 8300000, guid: 82216c61ffcc8a24d98ac80773d93299, type: 3}
+  metalClips:
+  - {fileID: 8300000, guid: 5ead0973ac5452744b4d56a46cd6642e, type: 3}
+  - {fileID: 8300000, guid: 6d0b9f7471f22544c9d0dd5fd98bccef, type: 3}
+  grassClips:
+  - {fileID: 8300000, guid: 797b9696d9d86c8458aab463915505c7, type: 3}
+  - {fileID: 8300000, guid: 0a8c02a702a9f8142b1a438de100dcb5, type: 3}
   interactionRayPoint: {x: 0.5, y: 0.5, z: 0}
   interactionDistance: 2
   interactionLayer:
     serializedVersion: 2
     m_Bits: 512
+--- !u!82 &611438747
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 611438743}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -2027,7 +2142,7 @@ GameObject:
   - component: {fileID: 1423833343}
   m_Layer: 0
   m_Name: ProPark001
-  m_TagString: Untagged
+  m_TagString: Footsteps/GRASS
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2082,7 +2197,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c22777d6e868e4f2fb421913386b154e, type: 2}
+  - {fileID: 2100000, guid: 57b559a46e2daea4a9957346c974e104, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4798,7 +4913,7 @@ GameObject:
   - component: {fileID: 1680977081}
   m_Layer: 0
   m_Name: Stairs001
-  m_TagString: Untagged
+  m_TagString: Footsteps/METAL
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4868,7 +4983,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c22777d6e868e4f2fb421913386b154e, type: 2}
+  - {fileID: 2100000, guid: 0d59ef684277fb944984d2f9fb0a97f4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5964,7 +6079,7 @@ GameObject:
   - component: {fileID: 2026935350}
   m_Layer: 0
   m_Name: Cube
-  m_TagString: Untagged
+  m_TagString: Footsteps/WOOD
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -6049,7 +6164,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 2782fdb8a9edfcf44be1e20db0808f5e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

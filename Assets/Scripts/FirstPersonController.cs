@@ -17,6 +17,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private bool willSlideOnSlopes = true;
     [SerializeField] private bool canZoom = true;
     [SerializeField] private bool canInteract = true;
+    [SerializeField] private bool useFootsteps = true;
 
 
     [Header("Controls")]
@@ -41,6 +42,15 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField, Range(1, 180)] private float lowerLookLimit = 80.0f;
 
     
+    [Header("Health Parameters")]
+    [SerializeField] private float maxHealth = 100f;
+    [SerializeField] private float timeBeforeRegenStarts = 3f;
+    [SerializeField] private float healthValueIncrement = 1f;
+    [SerializeField] private float healthTimeIncrement = 0.1f;
+    private float curHealth;
+    private Coroutine regeneratingHealth;
+
+
     [Header("Jumping Parameters")]
     [SerializeField] private float jumpForce = 8.0f;
     [SerializeField] private float gravity = 30.0f;
@@ -72,6 +82,20 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float zoomFOV = 30f;
     private float defaultFOV;
     private Coroutine zoomRoutine;
+
+    
+    [Header("Footstep Parameters")]
+    [SerializeField] private float baseStepSpeed = 0.5f;
+    [SerializeField] private float crouchStepMultiplier = 1.5f;
+    [SerializeField] private float sprintStepMultiplier = 0.6f;
+    [SerializeField] private AudioSource footstepAudioSource = default;
+    [SerializeField] private AudioClip[] woodClips = default;
+    [SerializeField] private AudioClip[] metalClips = default;
+    [SerializeField] private AudioClip[] grassClips = default;
+    private float footstepTimer = 0;
+    private float GetCurOffset => isCrouching ? baseStepSpeed * crouchStepMultiplier : IsSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
+
+
 
     //SLIDING PARAMETERS
     private Vector3 hitPointNormal;
@@ -107,6 +131,7 @@ public class FirstPersonController : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         defaultYPos = playerCamera.transform.localPosition.y;
         defaultFOV = playerCamera.fieldOfView;
+        curHealth = maxHealth;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -133,10 +158,17 @@ public class FirstPersonController : MonoBehaviour
                 HandleZoom();
             }
 
+            if(useFootsteps){
+                HandleFootsteps();
+            }
+
             if(canInteract){
                 HandleInteractionCheck();
                 HandleInteractionInput();
             }
+
+            int rand = Random.Range(0,2);
+            print(rand);
 
             ApplyFinalMovements();
         }
@@ -232,6 +264,16 @@ public class FirstPersonController : MonoBehaviour
     }
 
 
+    private void ApplyDamage(float dmg){
+
+    }
+
+
+    private void KillPlayer(){
+
+    }
+
+
     private void ApplyFinalMovements(){
         if(!characterController.isGrounded){
             moveDirection.y -= gravity * Time.deltaTime;
@@ -243,6 +285,37 @@ public class FirstPersonController : MonoBehaviour
 
         characterController.Move(moveDirection * Time.deltaTime);
     }
+
+
+    private void HandleFootsteps(){
+        if(!characterController.isGrounded) return;
+
+        if(curInput == Vector2.zero) return;
+
+        footstepTimer -= Time.deltaTime;
+
+        if(footstepTimer <=0){
+            if(Physics.Raycast(playerCamera.transform.position, Vector3.down, out RaycastHit hit, 3)){
+                switch(hit.collider.tag){
+                    case "Footsteps/WOOD":
+                        footstepAudioSource.PlayOneShot(woodClips[Random.Range(0, woodClips.Length)]);
+                        break;
+                    case "Footsteps/METAL":
+                        footstepAudioSource.PlayOneShot(metalClips[Random.Range(0, metalClips.Length)]);
+                        break;
+                    case "Footsteps/GRASS":
+                        footstepAudioSource.PlayOneShot(grassClips[Random.Range(0, grassClips.Length)]);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            footstepTimer = GetCurOffset;
+        }
+    }
+
+
 
     private IEnumerator CrouchStand(){
         if(isCrouching && Physics.Raycast(playerCamera.transform.position, Vector3.up, 1f)){
@@ -290,6 +363,9 @@ public class FirstPersonController : MonoBehaviour
         zoomRoutine = null;
     }
 
+    
+    // private IEnumerator RegenerateHealth(){
 
+    // }
 
 }
