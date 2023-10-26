@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random=UnityEngine.Random;
+using System;
 
 public class FirstPersonController : MonoBehaviour
 {
@@ -18,6 +20,8 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private bool canZoom = true;
     [SerializeField] private bool canInteract = true;
     [SerializeField] private bool useFootsteps = true;
+    [SerializeField] private bool useStamina = true;
+
 
 
     [Header("Controls")]
@@ -49,6 +53,20 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float healthTimeIncrement = 0.1f;
     private float curHealth;
     private Coroutine regeneratingHealth;
+    public static Action<float> OnTakeDamage;
+    public static Action<float> OnDamage;
+    public static Action<float> OnHeal;
+
+
+    [Header("Stamina Parameters")]
+    [SerializeField] private float maxStamina = 100f;
+    [SerializeField] private float staminaUseMultiplier = 5;
+    [SerializeField] private float timeBeforeStaminaRegenStarts = 5f;
+    [SerializeField] private float staminaValueIncrement = 2f;
+    [SerializeField] private float staminaTimeIncrement = 0.1f;
+    private float curStamina;
+    private Coroutine regeneratingStamina;
+    public static Action<float> OnStaminaChange;
 
 
     [Header("Jumping Parameters")]
@@ -126,12 +144,22 @@ public class FirstPersonController : MonoBehaviour
 
     private float rotationX = 0;
 
+
+    private void OnEnable(){
+        OnTakeDamage += ApplyDamage;
+    }
+
+    private void OnDisable(){
+        OnTakeDamage -= ApplyDamage;
+    }
+
     void Awake(){
         playerCamera = GetComponentInChildren<Camera>();
         characterController = GetComponent<CharacterController>();
         defaultYPos = playerCamera.transform.localPosition.y;
         defaultFOV = playerCamera.fieldOfView;
         curHealth = maxHealth;
+        curStamina = maxStamina;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -167,8 +195,9 @@ public class FirstPersonController : MonoBehaviour
                 HandleInteractionInput();
             }
 
-            int rand = Random.Range(0,2);
-            print(rand);
+            if(useStamina){
+                HandleStamina();
+            }
 
             ApplyFinalMovements();
         }
@@ -265,12 +294,54 @@ public class FirstPersonController : MonoBehaviour
 
 
     private void ApplyDamage(float dmg){
+        curHealth -= dmg;
+        OnDamage?.Invoke(curHealth);
 
+        if(curHealth <= 0){
+            KillPlayer();
+        } else if (regeneratingHealth != null){
+            StopCoroutine(regeneratingHealth);
+        }
+
+        regeneratingHealth = StartCoroutine(RegenerateHealth());
     }
 
 
     private void KillPlayer(){
+        curHealth = 0;
 
+        if(regeneratingHealth != null){
+            StopCoroutine(regeneratingHealth);
+        }
+
+        print("DEAD");
+    }
+
+
+    private void HandleStamina(){
+        if(IsSprinting && curInput != Vector2.zero){
+
+            if(regeneratingStamina != null){
+                StopCoroutine(regeneratingStamina);
+                regeneratingStamina = null;
+            }
+
+            curStamina -= staminaUseMultiplier * Time.deltaTime;
+
+            if(curStamina < 0){
+                curStamina = 0;
+            }
+
+            OnStaminaChange?.Invoke(curStamina);
+
+            if(curStamina <= 0){
+                canSprint = false;
+            }
+        }
+
+        if(!IsSprinting && curStamina < maxStamina && regeneratingStamina == null){
+            regeneratingStamina = StartCoroutine(RegenerateStamina());
+        }
     }
 
 
@@ -364,8 +435,49 @@ public class FirstPersonController : MonoBehaviour
     }
 
     
-    // private IEnumerator RegenerateHealth(){
+    private IEnumerator RegenerateHealth(){
 
-    // }
+        yield return new WaitForSeconds(timeBeforeRegenStarts);
+
+        WaitForSeconds timeToWait = new WaitForSeconds(healthTimeIncrement);
+
+        while(curHealth < maxHealth){
+            curHealth += healthValueIncrement;
+
+            if(curHealth > maxHealth){
+                curHealth = maxHealth;
+            }
+
+            OnHeal?.Invoke(curHealth);
+
+            yield return timeToWait;
+        }
+
+        regeneratingHealth = null;
+
+    }
+
+    private IEnumerator RegenerateStamina(){
+        yield return new WaitForSeconds(timeBeforeStaminaRegenStarts);
+        WaitForSeconds timeToWait = new WaitForSeconds(staminaTimeIncrement);
+
+        while(curStamina < maxStamina){
+            if(curStamina > 0){
+                canSprint = true;
+            }
+
+            curStamina += staminaValueIncrement;
+
+            if(curStamina > maxStamina){
+                curStamina = maxStamina;
+            }
+
+            OnStaminaChange?.Invoke(curStamina);
+
+            yield return timeToWait;
+        }
+
+        regeneratingStamina = null;
+    }
 
 }
