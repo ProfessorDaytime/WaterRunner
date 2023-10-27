@@ -39,6 +39,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float sprintSpeed = 6.0f;
     [SerializeField] private float crouchSpeed = 1.5f;
     [SerializeField] private float slopeSpeed = 8f;
+    [SerializeField] private float climbSpeed = 2.5f;
 
     
     [Header("Look Parameters")]
@@ -456,10 +457,12 @@ public class FirstPersonController : MonoBehaviour
             case 0:
                 thirdCamera.SetActive(false);
                 firstCamera.SetActive(true);
+                print("Set to First Person");
                 break;
             case 1:
                 firstCamera.SetActive(false);
                 thirdCamera.SetActive(true);
+                print("Set to Third Person");
                 break;
         }
     }
