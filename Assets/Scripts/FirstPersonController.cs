@@ -21,6 +21,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private bool canInteract = true;
     [SerializeField] private bool useFootsteps = true;
     [SerializeField] private bool useStamina = true;
+    [SerializeField] private bool useThirdPersonCamera = true;
 
 
 
@@ -30,6 +31,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private KeyCode crouchKey = KeyCode.LeftControl;
     [SerializeField] private KeyCode interactKey = KeyCode.Mouse0;
     [SerializeField] private KeyCode zoomKey = KeyCode.Mouse1;
+    [SerializeField] private KeyCode camKey = KeyCode.Mouse2;
 
     
     [Header("Movement Parameters")]
@@ -44,6 +46,14 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField, Range(1, 10)] private float lookSpeedY = 2.0f;
     [SerializeField, Range(1, 180)] private float upperLookLimit = 80.0f;
     [SerializeField, Range(1, 180)] private float lowerLookLimit = 80.0f;
+
+    
+    [Header("Camera Parameters")]
+    [SerializeField] private GameObject firstCamera;
+    [SerializeField] private GameObject thirdCamera;
+    [SerializeField] private int camMode;
+    [SerializeField] private float timeBeforeCamChange = 0.01f;
+    private Coroutine togglingCamera;
 
     
     [Header("Health Parameters")]
@@ -154,7 +164,8 @@ public class FirstPersonController : MonoBehaviour
     }
 
     void Awake(){
-        playerCamera = GetComponentInChildren<Camera>();
+        // playerCamera = GetComponentInChildren<Camera>();
+        playerCamera = firstCamera.GetComponent<Camera>();
         characterController = GetComponent<CharacterController>();
         defaultYPos = playerCamera.transform.localPosition.y;
         defaultFOV = playerCamera.fieldOfView;
@@ -199,6 +210,10 @@ public class FirstPersonController : MonoBehaviour
                 HandleStamina();
             }
 
+            if(useThirdPersonCamera){
+                HandleCameraToggle();
+            }
+
             ApplyFinalMovements();
         }
     }
@@ -220,6 +235,22 @@ public class FirstPersonController : MonoBehaviour
         transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeedX, 0);
     }
 
+
+    private void HandleCameraToggle(){
+
+        if(Input.GetKeyDown(camKey)){
+            switch(camMode){
+                case 0: 
+                    camMode = 1;
+                    break;
+                case 1:
+                    camMode = 0;
+                    break;
+            }
+
+            togglingCamera = StartCoroutine(ToggleCamera());
+        }
+    }
 
     private void HandleJump(){
         if(ShouldJump){
@@ -416,6 +447,21 @@ public class FirstPersonController : MonoBehaviour
 
         duringCrouchAnimation = false;
 
+    }
+
+    private IEnumerator ToggleCamera(){
+        yield return new WaitForSeconds(timeBeforeCamChange);
+
+        switch(camMode){
+            case 0:
+                thirdCamera.SetActive(false);
+                firstCamera.SetActive(true);
+                break;
+            case 1:
+                firstCamera.SetActive(false);
+                thirdCamera.SetActive(true);
+                break;
+        }
     }
 
 
