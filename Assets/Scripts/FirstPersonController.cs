@@ -8,8 +8,8 @@ public class FirstPersonController : MonoBehaviour
 {
     public bool CanMove { get; private set; } = true;
     private bool IsSprinting => canSprint && Input.GetKey(sprintKey);
-    private bool ShouldJump => Input.GetKeyDown(jumpKey) && characterController.isGrounded;
-    private bool ShouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && characterController.isGrounded;
+    private bool ShouldJump => Input.GetKeyDown(jumpKey) && onSurface;
+    private bool ShouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && onSurface;
 
     [Header("Functional Options")]
     [SerializeField] private bool canSprint = true;
@@ -22,6 +22,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private bool useFootsteps = true;
     [SerializeField] private bool useStamina = true;
     [SerializeField] private bool useThirdPersonCamera = true;
+    [SerializeField] private bool useSurfaceChecks = true;
 
 
 
@@ -80,9 +81,13 @@ public class FirstPersonController : MonoBehaviour
     public static Action<float> OnStaminaChange;
 
 
-    [Header("Jumping Parameters")]
+    [Header("Collision & Gravity")]
     [SerializeField] private float jumpForce = 8.0f;
-    [SerializeField] private float gravity = 30.0f;
+    [SerializeField] private float gravity = 2.0f;
+    [SerializeField] private float surfaceCheckRadius = 0.3f;
+    [SerializeField] private Vector3 surfaceCheckOffset;
+    [SerializeField] private LayerMask surfaceLayer;
+    private bool onSurface;
 
     
     [Header("Crouch Parameters")]
@@ -124,14 +129,15 @@ public class FirstPersonController : MonoBehaviour
     private float footstepTimer = 0;
     private float GetCurOffset => isCrouching ? baseStepSpeed * crouchStepMultiplier : IsSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
 
-
+    [Header("Player Animator")]
+    [SerializeField] private Animator animator;
 
     //SLIDING PARAMETERS
     private Vector3 hitPointNormal;
 
     private bool IsSliding{
         get{
-            if(characterController.isGrounded && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopeHit, 2f)){
+            if(onSurface && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopeHit, 2f)){
                 hitPointNormal = slopeHit.normal;
                 return Vector3.Angle(hitPointNormal, Vector3.up) > characterController.slopeLimit;
             } else {
@@ -182,6 +188,10 @@ public class FirstPersonController : MonoBehaviour
             HandleMovementInput();
             HandleMouseLook();
 
+            if(useSurfaceChecks){
+                HandleSurfaceChecks();
+            }
+
             if(canJump){
                 HandleJump();
             }
@@ -223,9 +233,13 @@ public class FirstPersonController : MonoBehaviour
     private void HandleMovementInput(){
         curInput = new Vector2((IsSprinting ? sprintSpeed: isCrouching ? crouchSpeed : walkSpeed) * Input.GetAxis("Vertical"), (IsSprinting ? sprintSpeed: isCrouching ? crouchSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
 
+        float movementAmount = Mathf.Clamp01(Mathf.Abs(curInput.x) + Mathf.Abs(curInput.y));
+
         float moveDirectionY = moveDirection.y;
         moveDirection = (transform.TransformDirection(Vector3.forward) * curInput.x) + (transform.TransformDirection(Vector3.right) * curInput.y);
         moveDirection.y = moveDirectionY;
+
+        animator.SetFloat("movementValue", movementAmount, 0.2f, Time.deltaTime);
     }
 
 
@@ -268,7 +282,7 @@ public class FirstPersonController : MonoBehaviour
 
 
     private void HandleHeadbob(){
-        if(!characterController.isGrounded) return;
+        if(!onSurface) return;
 
         if(Mathf.Abs(moveDirection.x) > 0.1f || Mathf.Abs(moveDirection.z) > 0.1f){
             timer += Time.deltaTime * (isCrouching ? crouchBobSpeed : IsSprinting ? sprintBobSpeed : walkBobSpeed);
@@ -378,7 +392,8 @@ public class FirstPersonController : MonoBehaviour
 
 
     private void ApplyFinalMovements(){
-        if(!characterController.isGrounded){
+        if(!onSurface){
+            // print("IS NOT GROUNDED, SHOULD BE FALLING");
             moveDirection.y -= gravity * Time.deltaTime;
         }
 
@@ -391,7 +406,7 @@ public class FirstPersonController : MonoBehaviour
 
 
     private void HandleFootsteps(){
-        if(!characterController.isGrounded) return;
+        if(!onSurface) return;
 
         if(curInput == Vector2.zero) return;
 
@@ -418,6 +433,16 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    private void HandleSurfaceChecks(){
+        onSurface = Physics.CheckSphere(transform.TransformPoint(surfaceCheckOffset), surfaceCheckRadius, surfaceLayer);
+        print("Player on surface: " + onSurface);
+    }
+
+    //This is pretty cool, it draws in the editor, not the game
+    private void OnDrawGizmosSelected(){
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(transform.TransformPoint(surfaceCheckOffset), surfaceCheckRadius);
+    }
 
 
     private IEnumerator CrouchStand(){
