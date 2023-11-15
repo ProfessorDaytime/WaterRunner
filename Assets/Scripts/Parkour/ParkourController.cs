@@ -6,7 +6,7 @@ public class ParkourController : MonoBehaviour
 {
     
     public EnvironmentChecker environmentChecker;
-    private bool playerInaction;
+    private bool playerInAction;
     public Animator animator;
 
     [Header("Functional Options")]
@@ -19,14 +19,50 @@ public class ParkourController : MonoBehaviour
     [SerializeField] private KeyCode jumpKey = KeyCode.Space;
 
     [Header("Parkour Actions")]
-    public List<ParkourAction> parkourAction;
+    public List<ParkourAction> parkourActions;
 
     void Update(){
 
-        var hitData = environmentChecker.CheckObstacle();
-        
-        if(hitData.hitFound){
-            print("Object Found: " + hitData.obstacleHit.transform.name);
+        if(Input.GetKeyDown(jumpKey)){
+            print("JUMP");
+            print("Player In Action: " + playerInAction);
         }
+
+        if(Input.GetKeyDown(jumpKey) && !playerInAction){
+            var hitData = environmentChecker.CheckObstacle();
+        
+            if(hitData.hitFound){
+                print("Object Found: " + hitData.obstacleHit.transform.name);
+
+                foreach (var action in parkourActions){
+                    print("Action in ParkourActions");
+                    if(action.CheckIfAvailable(hitData, transform)){
+                        // perform parkour action
+                        print("Available");
+                        StartCoroutine(PerformParkourAction(action));
+                        break;
+                    }
+                }
+            }
+        }
+        
     }
+
+    IEnumerator PerformParkourAction(ParkourAction action){
+        playerInAction = true;
+
+        animator.CrossFade(action.AnimationName, 0.2f);
+
+        yield return null;
+
+        var animationState = animator.GetNextAnimatorStateInfo(0);
+        if(!animationState.IsName(action.AnimationName)){
+            print("Animation Name is Incorrect:  " + action.AnimationName);
+        }
+
+        yield return new WaitForSeconds(animationState.length);
+
+        playerInAction = false;
+    }
+
 }

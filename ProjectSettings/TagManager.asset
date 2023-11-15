@@ -7,6 +7,7 @@ TagManager:
   - Footsteps/GRASS
   - Footsteps/WOOD
   - Footsteps/METAL
+  - Climb
   layers:
   - Default
   - TransparentFX

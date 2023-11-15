@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EnvironmentChecker : MonoBehaviour
 {
-    public Vector3 rayOffset = new Vector3(0,0.2f,0);
+    public Vector3 rayOffset = new Vector3(0,0.6f,0);
     public float rayLength = 0.9f;
     public float heightRayLength = 6f;
     public LayerMask obstacleLayer;

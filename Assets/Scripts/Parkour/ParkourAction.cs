@@ -12,7 +12,11 @@ public class ParkourAction : ScriptableObject
 
 
     public bool CheckIfAvailable(ObstacleInfo hitInfo, Transform player){
-        float checkHeight = hitInfo.heightHit.point.y - player.position.y;
+        float checkHeight = player.position.y - hitInfo.heightHit.point.y;
+
+        Debug.Log("Player Y: " + player.position.y);
+        Debug.Log("Hit info. hit height: " + hitInfo.heightHit.point.y);
+        Debug.Log("Check Height: " + checkHeight);
 
         if(checkHeight < minimumHeight || checkHeight > maximumHeight){
             return false;

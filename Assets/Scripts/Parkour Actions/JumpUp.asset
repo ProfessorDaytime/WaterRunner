@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: JumpUp
   m_EditorClassIdentifier: 
   animationName: JumpUp
-  minimumHeight: 0.91
+  minimumHeight: 0.5
   maximumHeight: 2
