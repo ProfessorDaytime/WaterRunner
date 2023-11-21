@@ -8,6 +8,7 @@ public class UI : MonoBehaviour
     
     [SerializeField] private TextMeshProUGUI healthText = default;
     [SerializeField] private TextMeshProUGUI staminaText = default;
+    [SerializeField] private TextMeshProUGUI contextText = default;
 
     private void OnEnable(){
         FirstPersonController.OnDamage += UpdateHealth;

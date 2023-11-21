@@ -10,6 +10,7 @@ public class FirstPersonController : MonoBehaviour
     private bool IsSprinting => canSprint && Input.GetKey(sprintKey);
     private bool ShouldJump => Input.GetKeyDown(jumpKey) && onSurface;
     private bool ShouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && onSurface;
+    private bool ShouldClimb => Input.GetKeyDown(climbKey) && onWall; //not sure if this'll be used
 
     [Header("Functional Options")]
     [SerializeField] private bool canSprint = true;
@@ -23,6 +24,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private bool useStamina = true;
     [SerializeField] private bool useThirdPersonCamera = true;
     [SerializeField] private bool useSurfaceChecks = true;
+    [SerializeField] private bool canClimb = true;
 
 
 
@@ -33,6 +35,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private KeyCode interactKey = KeyCode.Mouse0;
     [SerializeField] private KeyCode zoomKey = KeyCode.Mouse1;
     [SerializeField] private KeyCode camKey = KeyCode.Mouse2;
+    [SerializeField] private KeyCode climbKey = KeyCode.R;
 
     
     [Header("Movement Parameters")]
@@ -117,6 +120,16 @@ public class FirstPersonController : MonoBehaviour
     private float defaultFOV;
     private Coroutine zoomRoutine;
 
+
+    [Header("Climb Parameters")]
+    private bool isClimbing;
+    private bool onWall;
+
+
+    [Header("UI Parameters")]
+    [SerializeField] private string contextText;
+    public static Action<string> OnContext;
+
     
     [Header("Footstep Parameters")]
     [SerializeField] private float baseStepSpeed = 0.5f;
@@ -152,6 +165,17 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private LayerMask interactionLayer = default;
     private Interactable curInteractable;
 
+    [Header("States")]
+    [SerializeField] public PlayerState state = PlayerState.CLIMBING;
+    public enum PlayerState{
+        WALKING,
+        FALLING,
+        CLIMBING,
+        RUNNING,
+        CROUCHING,
+        GLIDING,
+        TALKING
+    }
 
     private Camera playerCamera;
     private CharacterController characterController;
@@ -225,20 +249,28 @@ public class FirstPersonController : MonoBehaviour
                 HandleCameraToggle();
             }
 
+            if(canClimb){
+                HandleClimb();
+            }
+
             ApplyFinalMovements();
         }
     }
 
 
     private void HandleMovementInput(){
-        curInput = new Vector2((IsSprinting ? sprintSpeed: isCrouching ? crouchSpeed : walkSpeed) * Input.GetAxis("Vertical"), (IsSprinting ? sprintSpeed: isCrouching ? crouchSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
+        curInput = new Vector2((IsSprinting ? sprintSpeed: isCrouching ? crouchSpeed : isClimbing ? climbSpeed : walkSpeed) * Input.GetAxis("Vertical"), (IsSprinting ? sprintSpeed: isCrouching ? crouchSpeed : isClimbing ? climbSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
 
         float movementAmount = Mathf.Clamp01(Mathf.Abs(curInput.x) + Mathf.Abs(curInput.y));
 
-        float moveDirectionY = moveDirection.y;
-        moveDirection = (transform.TransformDirection(Vector3.forward) * curInput.x) + (transform.TransformDirection(Vector3.right) * curInput.y);
-        moveDirection.y = moveDirectionY;
-
+        
+        if(!isClimbing){
+            float moveDirectionY = moveDirection.y;
+            moveDirection = (transform.TransformDirection(Vector3.forward) * curInput.x) + (transform.TransformDirection(Vector3.right) * curInput.y);
+            moveDirection.y = moveDirectionY;
+        } 
+        
+        // print("Move Direction1: " + moveDirection);
         animator.SetFloat("movementValue", movementAmount, 0.2f, Time.deltaTime);
     }
 
@@ -279,6 +311,93 @@ public class FirstPersonController : MonoBehaviour
             StartCoroutine(CrouchStand());
         }
     }
+
+
+    //TO DO Add animations
+    //TO DO Check if at the top of the wall with another raycast
+    //To do, check if the player is trying to go down and OnSurface == true, make them not climb and just put them down on the ground, not below it.
+    //TO DO Check if there are any obstacles that would stop from moving on the wall on the sides.
+    private void HandleClimb(){
+
+        // print("Handle Climb");
+
+        
+
+        //do clumb stuff
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+
+        Vector2 input = SquareToCircle(new Vector2(h, v));
+
+        Vector3 offset = transform.TransformDirection(Vector2.one * 0.5f);
+        Vector3 checkDirection = Vector3.zero;
+        int k = 0;
+
+        for(int i = 0; i < 4; i++){
+            RaycastHit checkHit;
+            if(Physics.Raycast(transform.position + offset, transform.forward, out checkHit)){
+                checkDirection += checkHit.normal;
+                k++;
+            }
+
+            //Rotate Offset by 90 degrees
+            offset = Quaternion.AngleAxis(90f, transform.forward) * offset;
+        }
+        checkDirection /= k;
+
+
+        //Check wall directly in front
+        RaycastHit hit;
+        if(Physics.Raycast(transform.position, -checkDirection, out hit)){
+            float dot = Vector3.Dot(transform.forward, -hit.normal);
+
+            // print("Wall In Front");
+
+            if(isClimbing){
+                
+
+                transform.forward = Vector3.Lerp(transform.forward, -hit.normal, 10f * Time.fixedDeltaTime);
+
+                // moveDirection = new Vector3(0f,8f, 0f);
+                characterController.enabled = false;
+
+                // transform.position = Vector3.Lerp(transform.position, hit.point + hit.normal * 0.55f, 5f * Time.fixedDeltaTime);
+                transform.position += new Vector3(h * Time.fixedDeltaTime, v * Time.fixedDeltaTime, 0f);
+                
+                print("Lerp: " + Vector3.Lerp(transform.position, hit.point + hit.normal * 0.55f, 5f * Time.fixedDeltaTime));
+                print("Plus Equals" + h * Time.fixedDeltaTime + ", " + v * Time.fixedDeltaTime);
+
+
+                // rb.velocity = transform.TransformDirection(input) * climbSpeed;
+
+                // print("Move Direction3: " + moveDirection);
+                if(Input.GetKeyDown(climbKey)){
+                    isClimbing = false;
+                    moveDirection = Vector3.zero;
+                    characterController.enabled = true;
+                }
+            } else{
+                if(Input.GetKeyDown(climbKey)){
+                    // print("Should Climb now");
+                    isClimbing = true;
+                }
+            }
+
+            
+
+            // if(jumpDown){
+            //     rb.velocity = Vector3.up * 5f + hit.normal * 2f;
+            //     state = PlayerState.FALLING;
+            // }
+        } else {
+            // state = PlayerState.FALLING;
+        }
+
+        
+        
+    }
+
+    
 
 
     private void HandleHeadbob(){
@@ -339,6 +458,8 @@ public class FirstPersonController : MonoBehaviour
     }
 
 
+    //Sets health lower when the player takes damage
+    //takes float dmg 
     private void ApplyDamage(float dmg){
         curHealth -= dmg;
         OnDamage?.Invoke(curHealth);
@@ -353,6 +474,9 @@ public class FirstPersonController : MonoBehaviour
     }
 
 
+    //TO DO Do some other stuff when the player dies.
+    //Set a respawn when the character dies
+    //Also make a plane or something that kills the player when they fall off the edge
     private void KillPlayer(){
         curHealth = 0;
 
@@ -364,22 +488,30 @@ public class FirstPersonController : MonoBehaviour
     }
 
 
+    //handles everything Stamina related
     private void HandleStamina(){
+        //if the player is sprinting and moving
         if(IsSprinting && curInput != Vector2.zero){
 
+            //stops stamina regen
             if(regeneratingStamina != null){
                 StopCoroutine(regeneratingStamina);
                 regeneratingStamina = null;
             }
 
+            //I think staminaUseMultiplier can be changed by different types of movement
+            //TO DO Make running, jumping, climbing... have different stamina multipliers
             curStamina -= staminaUseMultiplier * Time.deltaTime;
 
+            //makes sure stamina doesn't go below 0
             if(curStamina < 0){
                 curStamina = 0;
             }
 
+            //Sets stamina in UI
             OnStaminaChange?.Invoke(curStamina);
 
+            //Turns off sprint if out of stamina
             if(curStamina <= 0){
                 canSprint = false;
             }
@@ -391,20 +523,26 @@ public class FirstPersonController : MonoBehaviour
     }
 
 
+    //Calls the Move function of the characterController
     private void ApplyFinalMovements(){
-        if(!onSurface){
+        
+        if(isClimbing){
+            // moveDirection.y += climbSpeed * Time.deltaTime;
+        } else if(!onSurface){
             // print("IS NOT GROUNDED, SHOULD BE FALLING");
             moveDirection.y -= gravity * Time.deltaTime;
         }
 
+
         if(willSlideOnSlopes && IsSliding){
             moveDirection += new Vector3(hitPointNormal.x, -hitPointNormal.y, hitPointNormal.z) * slopeSpeed;
         }
-
+        // print("Move Direction2: " + moveDirection);
         characterController.Move(moveDirection * Time.deltaTime);
     }
 
 
+    //This triggers sounds for footsteps
     private void HandleFootsteps(){
         if(!onSurface) return;
 
@@ -433,9 +571,10 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    //Check if the player is on a surface with the layer being surfaceLayer
     private void HandleSurfaceChecks(){
         onSurface = Physics.CheckSphere(transform.TransformPoint(surfaceCheckOffset), surfaceCheckRadius, surfaceLayer);
-        print("Player on surface: " + onSurface);
+        // print("Player on surface: " + onSurface);
     }
 
     //This is pretty cool, it draws in the editor, not the game
@@ -444,7 +583,13 @@ public class FirstPersonController : MonoBehaviour
         Gizmos.DrawSphere(transform.TransformPoint(surfaceCheckOffset), surfaceCheckRadius);
     }
 
+    //Maps input for joy sticks for climbing
+    Vector2 SquareToCircle(Vector2 input){
+        return (input.sqrMagnitude >= 1f) ? input.normalized : input;
+    }
 
+    //Toggles crouching and standing
+    //Def will need work with the full humanoid model --currently clips model through ground
     private IEnumerator CrouchStand(){
         if(isCrouching && Physics.Raycast(playerCamera.transform.position, Vector3.up, 1f)){
             yield break;
@@ -475,6 +620,7 @@ public class FirstPersonController : MonoBehaviour
 
     }
 
+    //Toggles between first and third person camera
     private IEnumerator ToggleCamera(){
         yield return new WaitForSeconds(timeBeforeCamChange);
 
@@ -492,7 +638,8 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
-
+    //Takes in value isEnter to determine if it is zooming in or out
+    //doesn't currently work in 3rd person
     private IEnumerator ToggleZoom(bool isEnter){
         float targetFOV = isEnter ? zoomFOV : defaultFOV;
         float startingFOV = playerCamera.fieldOfView;
@@ -509,6 +656,8 @@ public class FirstPersonController : MonoBehaviour
     }
 
     
+    //Regenerates Health after waiting a bit of time
+    //updates UI with current health value
     private IEnumerator RegenerateHealth(){
 
         yield return new WaitForSeconds(timeBeforeRegenStarts);
@@ -531,6 +680,8 @@ public class FirstPersonController : MonoBehaviour
 
     }
 
+    //Regenerates stamina after waiting a bit of time
+    //updates UI with current stamina value
     private IEnumerator RegenerateStamina(){
         yield return new WaitForSeconds(timeBeforeStaminaRegenStarts);
         WaitForSeconds timeToWait = new WaitForSeconds(staminaTimeIncrement);
