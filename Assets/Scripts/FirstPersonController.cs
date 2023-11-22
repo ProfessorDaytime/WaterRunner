@@ -12,6 +12,7 @@ public class FirstPersonController : MonoBehaviour
     private bool ShouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && onSurface;
     private bool ShouldClimb => Input.GetKeyDown(climbKey) && onWall; //not sure if this'll be used
 
+
     [Header("Functional Options")]
     [SerializeField] private bool canSprint = true;
     [SerializeField] private bool canJump = true;
@@ -123,7 +124,8 @@ public class FirstPersonController : MonoBehaviour
 
     [Header("Climb Parameters")]
     private bool isClimbing;
-    private bool onWall;
+    private bool onWall = false;
+    private bool onWallTop = false;
 
 
     [Header("UI Parameters")]
@@ -208,6 +210,9 @@ public class FirstPersonController : MonoBehaviour
 
 
     void Update(){
+
+        
+
         if(CanMove){
             HandleMovementInput();
             HandleMouseLook();
@@ -253,11 +258,17 @@ public class FirstPersonController : MonoBehaviour
                 HandleClimb();
             }
 
+            if(animator){
+                animator.SetInteger("State", (int)state);
+            }
+
             ApplyFinalMovements();
         }
     }
 
 
+    //movementAmount is used for animation of the player 
+    //Sets moveDirection as a mix of
     private void HandleMovementInput(){
         curInput = new Vector2((IsSprinting ? sprintSpeed: isCrouching ? crouchSpeed : isClimbing ? climbSpeed : walkSpeed) * Input.GetAxis("Vertical"), (IsSprinting ? sprintSpeed: isCrouching ? crouchSpeed : isClimbing ? climbSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
 
@@ -327,6 +338,9 @@ public class FirstPersonController : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
+        animator.SetFloat("H", h);
+        animator.SetFloat("V", v);
+
         Vector2 input = SquareToCircle(new Vector2(h, v));
 
         Vector3 offset = transform.TransformDirection(Vector2.one * 0.5f);
@@ -348,8 +362,10 @@ public class FirstPersonController : MonoBehaviour
 
         //Check wall directly in front
         RaycastHit hit;
-        if(Physics.Raycast(transform.position, -checkDirection, out hit)){
+        if(Physics.Raycast(transform.position, -checkDirection, out hit, 1f)){
             float dot = Vector3.Dot(transform.forward, -hit.normal);
+
+            Debug.DrawRay(transform.position, transform.forward, Color.green,3);
 
             // print("Wall In Front");
 
@@ -358,19 +374,48 @@ public class FirstPersonController : MonoBehaviour
 
                 transform.forward = Vector3.Lerp(transform.forward, -hit.normal, 10f * Time.fixedDeltaTime);
 
-                // moveDirection = new Vector3(0f,8f, 0f);
                 characterController.enabled = false;
 
                 // transform.position = Vector3.Lerp(transform.position, hit.point + hit.normal * 0.55f, 5f * Time.fixedDeltaTime);
                 transform.position += new Vector3(h * Time.fixedDeltaTime, v * Time.fixedDeltaTime, 0f);
                 
-                print("Lerp: " + Vector3.Lerp(transform.position, hit.point + hit.normal * 0.55f, 5f * Time.fixedDeltaTime));
-                print("Plus Equals" + h * Time.fixedDeltaTime + ", " + v * Time.fixedDeltaTime);
+                // print("Lerp: " + Vector3.Lerp(transform.position, hit.point + hit.normal * 0.55f, 5f * Time.fixedDeltaTime));
+                // print("Plus Equals" + h * Time.fixedDeltaTime + ", " + v * Time.fixedDeltaTime);
 
 
-                // rb.velocity = transform.TransformDirection(input) * climbSpeed;
+                //Checking if the player is at the top of a wall
+                RaycastHit headHit;
+                if(Physics.Raycast(transform.position + new Vector3(0, 1, 0), -checkDirection, out headHit, 1f)){
 
-                // print("Move Direction3: " + moveDirection);
+                    Debug.DrawRay(transform.position + new Vector3(0, 1, 0), -checkDirection, Color.blue,3);
+
+                    onWallTop = false;
+                } else{
+
+                    Debug.DrawRay(transform.position + new Vector3(0, 1, 0), -checkDirection, Color.red,3);
+                    
+                    if(onWallTop){
+                        RaycastHit diagDownHit;
+                        if(Physics.Raycast(transform.position + new Vector3(0, 1.5f, 0), -checkDirection + new Vector3(0,-0.66f,0), out diagDownHit, 1f)){
+                            Debug.DrawRay(transform.position + new Vector3(0, 1.5f, 0), -checkDirection + new Vector3(0,-0.66f,0), Color.cyan,3);
+                            print(v);
+                            if(v >= 0.25f){
+                                transform.position += new Vector3(0,2,1.5f);
+                                isClimbing = false;
+                                characterController.enabled = true;
+                            }
+                        } else{
+                            Debug.DrawRay(transform.position + new Vector3(0, 1.5f, 0), -checkDirection + new Vector3(0,-0.66f,0), Color.yellow,3);
+                        }
+                    }
+
+                    onWallTop = true;
+
+                    
+                }
+
+
+                
                 if(Input.GetKeyDown(climbKey)){
                     isClimbing = false;
                     moveDirection = Vector3.zero;
@@ -378,17 +423,13 @@ public class FirstPersonController : MonoBehaviour
                 }
             } else{
                 if(Input.GetKeyDown(climbKey)){
-                    // print("Should Climb now");
                     isClimbing = true;
                 }
             }
 
             
 
-            // if(jumpDown){
-            //     rb.velocity = Vector3.up * 5f + hit.normal * 2f;
-            //     state = PlayerState.FALLING;
-            // }
+            
         } else {
             // state = PlayerState.FALLING;
         }
@@ -575,6 +616,16 @@ public class FirstPersonController : MonoBehaviour
     private void HandleSurfaceChecks(){
         onSurface = Physics.CheckSphere(transform.TransformPoint(surfaceCheckOffset), surfaceCheckRadius, surfaceLayer);
         // print("Player on surface: " + onSurface);
+
+
+        //TO DO make this state setting a new function
+        if(onSurface){
+            state = PlayerState.WALKING;
+        } else if(isClimbing){
+            state = PlayerState.CLIMBING;
+        } else{
+            state = PlayerState.FALLING;
+        }
     }
 
     //This is pretty cool, it draws in the editor, not the game
