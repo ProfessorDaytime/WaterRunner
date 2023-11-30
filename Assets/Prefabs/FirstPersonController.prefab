@@ -3667,12 +3667,14 @@ MonoBehaviour:
   useStamina: 1
   useThirdPersonCamera: 1
   useSurfaceChecks: 1
+  canClimb: 1
   sprintKey: 304
   jumpKey: 32
   crouchKey: 306
   interactKey: 323
   zoomKey: 324
   camKey: 325
+  climbKey: 114
   walkSpeed: 3
   sprintSpeed: 6
   crouchSpeed: 1.5
@@ -3701,7 +3703,7 @@ MonoBehaviour:
   surfaceCheckOffset: {x: 0, y: -0.84, z: 0}
   surfaceLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 0
   crouchingHeight: 0.5
   standingHeight: 2
   timeToCrouch: 0.25
@@ -3715,6 +3717,7 @@ MonoBehaviour:
   crouchBobAmount: 0.025
   timeToZoom: 0.3
   zoomFOV: 30
+  contextText: 
   baseStepSpeed: 0.5
   crouchStepMultiplier: 1.5
   sprintStepMultiplier: 0.6
@@ -3734,6 +3737,7 @@ MonoBehaviour:
   interactionLayer:
     serializedVersion: 2
     m_Bits: 512
+  state: 2
 --- !u!82 &2606282795449467913
 AudioSource:
   m_ObjectHideFlags: 0
@@ -3868,7 +3872,7 @@ MonoBehaviour:
   heightRayLength: 6
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 0
 --- !u!114 &6327884266199696075
 MonoBehaviour:
   m_ObjectHideFlags: 0

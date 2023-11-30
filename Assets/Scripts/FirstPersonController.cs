@@ -182,6 +182,9 @@ public class FirstPersonController : MonoBehaviour
     private Camera playerCamera;
     private CharacterController characterController;
 
+    private Vector3 startPos;
+
+
     private Vector3 moveDirection;
     private Vector2 curInput;
 
@@ -206,6 +209,7 @@ public class FirstPersonController : MonoBehaviour
         curStamina = maxStamina;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        startPos = transform.position;
     }
 
 
@@ -263,6 +267,32 @@ public class FirstPersonController : MonoBehaviour
             }
 
             ApplyFinalMovements();
+        }
+    }
+
+
+
+    void OnTriggerEnter(Collider other){
+        if(other.gameObject.tag == "respawn"){
+            characterController.enabled = false;
+            transform.position = startPos;
+            characterController.enabled = true;
+            print("RESPAWN");
+        }
+
+        if(other.gameObject.tag == "PickUp"){
+            other.gameObject.GetComponent<AudioSource>().Play();
+            other.gameObject.GetComponent<ParticleSystem>().Play();
+            other.gameObject.GetComponent<MeshRenderer>().enabled = false;
+            other.gameObject.GetComponent<Light>().enabled = false;
+            other.gameObject.GetComponent<BoxCollider>().enabled = false;
+
+            // other.gameObject.SetActive(false);
+            // pickupCount++;
+            // countText.text = "Count: " + pickupCount.ToString();
+            ApplyDamage(-20f);
+
+            
         }
     }
 
@@ -532,7 +562,7 @@ public class FirstPersonController : MonoBehaviour
     //handles everything Stamina related
     private void HandleStamina(){
         //if the player is sprinting and moving
-        if(IsSprinting && curInput != Vector2.zero){
+        if((IsSprinting || isClimbing) && curInput != Vector2.zero){
 
             //stops stamina regen
             if(regeneratingStamina != null){
@@ -558,7 +588,7 @@ public class FirstPersonController : MonoBehaviour
             }
         }
 
-        if(!IsSprinting && curStamina < maxStamina && regeneratingStamina == null){
+        if(!IsSprinting && !isClimbing && curStamina < maxStamina && regeneratingStamina == null){
             regeneratingStamina = StartCoroutine(RegenerateStamina());
         }
     }
@@ -571,7 +601,7 @@ public class FirstPersonController : MonoBehaviour
             // moveDirection.y += climbSpeed * Time.deltaTime;
         } else if(!onSurface){
             // print("IS NOT GROUNDED, SHOULD BE FALLING");
-            moveDirection.y -= gravity * Time.deltaTime;
+            moveDirection.y -=   gravity * Time.deltaTime;
         }
 
 
