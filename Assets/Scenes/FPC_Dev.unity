@@ -141,7 +141,7 @@ GameObject:
   - component: {fileID: 144037428}
   - component: {fileID: 144037427}
   - component: {fileID: 144037426}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Stairs001 (1)
   m_TagString: Footsteps/WOOD
   m_Icon: {fileID: 0}
@@ -2059,7 +2059,7 @@ GameObject:
   - component: {fileID: 917666711}
   - component: {fileID: 917666710}
   - component: {fileID: 917666709}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Obstacle 1
   m_TagString: Footsteps/WOOD
   m_Icon: {fileID: 0}
@@ -2383,7 +2383,7 @@ GameObject:
   - component: {fileID: 1145569448}
   - component: {fileID: 1145569447}
   - component: {fileID: 1145569446}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Cube (2)
   m_TagString: Footsteps/METAL
   m_Icon: {fileID: 0}
@@ -3772,7 +3772,7 @@ GameObject:
   - component: {fileID: 1423833345}
   - component: {fileID: 1423833344}
   - component: {fileID: 1423833343}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: ProPark001
   m_TagString: Footsteps/GRASS
   m_Icon: {fileID: 0}
@@ -6784,7 +6784,7 @@ GameObject:
   - component: {fileID: 1657118838}
   - component: {fileID: 1657118837}
   - component: {fileID: 1657118836}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Obstacle 1 (1)
   m_TagString: Footsteps/WOOD
   m_Icon: {fileID: 0}
@@ -7108,7 +7108,7 @@ GameObject:
   - component: {fileID: 1680977083}
   - component: {fileID: 1680977082}
   - component: {fileID: 1680977081}
-  m_Layer: 7
+  m_Layer: 0
   m_Name: Stairs001
   m_TagString: Footsteps/METAL
   m_Icon: {fileID: 0}
@@ -8934,6 +8934,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 253539195537212969, guid: caf792b2c25fa26428c3d61cd57d59be, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -40
+      objectReference: {fileID: 0}
+    - target: {fileID: 765720353197224586, guid: caf792b2c25fa26428c3d61cd57d59be, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -40
+      objectReference: {fileID: 0}
     - target: {fileID: 8783891877366660863, guid: caf792b2c25fa26428c3d61cd57d59be, type: 3}
       propertyPath: m_Name
       value: Canvas
@@ -9223,7 +9231,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7025742626170565376, guid: 91c4cc21d685ddd4a9e2e6f2fe37a147, type: 3}
       propertyPath: surfaceLayer.m_Bits
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7228314653552711492, guid: 91c4cc21d685ddd4a9e2e6f2fe37a147, type: 3}
       propertyPath: obstacleLayer.m_Bits

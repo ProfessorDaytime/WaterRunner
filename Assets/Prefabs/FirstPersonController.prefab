@@ -1268,7 +1268,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6545195904206147227
 Transform:
   m_ObjectHideFlags: 0
@@ -1407,7 +1407,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3844573690821625773
 Transform:
   m_ObjectHideFlags: 0
@@ -2980,7 +2980,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &7827156776185124395
 Transform:
   m_ObjectHideFlags: 0
@@ -3166,7 +3166,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &7716893885266523643
 Transform:
   m_ObjectHideFlags: 0
@@ -3616,7 +3616,7 @@ Transform:
   - {fileID: 6512741906899385770}
   - {fileID: 9168686725271684687}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &8028685584670756930
 CharacterController:
@@ -3703,7 +3703,7 @@ MonoBehaviour:
   surfaceCheckOffset: {x: 0, y: -0.84, z: 0}
   surfaceLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1
   crouchingHeight: 0.5
   standingHeight: 2
   timeToCrouch: 0.25
@@ -3738,6 +3738,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   state: 2
+  headMesh: {fileID: 7499687326634690107}
+  shirtMesh: {fileID: 3251665043144755429}
 --- !u!82 &2606282795449467913
 AudioSource:
   m_ObjectHideFlags: 0
@@ -4035,7 +4037,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1168783390021942882
 Transform:
   m_ObjectHideFlags: 0

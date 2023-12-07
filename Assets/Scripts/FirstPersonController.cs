@@ -179,8 +179,14 @@ public class FirstPersonController : MonoBehaviour
         TALKING
     }
 
+    [Header("Body Meshes")]
+    [SerializeField] private GameObject headMesh;
+    [SerializeField] private GameObject shirtMesh;
+
     private Camera playerCamera;
     private CharacterController characterController;
+
+    
 
     private Vector3 startPos;
 
@@ -338,6 +344,11 @@ public class FirstPersonController : MonoBehaviour
 
             togglingCamera = StartCoroutine(ToggleCamera());
         }
+
+        // if(camMode == 0){
+            
+        //     firstCamera.transform.position = headMesh.transform.position;
+        // }
     }
 
     private void HandleJump(){
@@ -703,21 +714,33 @@ public class FirstPersonController : MonoBehaviour
 
     //Toggles between first and third person camera
     private IEnumerator ToggleCamera(){
-        yield return new WaitForSeconds(timeBeforeCamChange);
+    yield return new WaitForSeconds(timeBeforeCamChange);
 
-        switch(camMode){
-            case 0:
-                thirdCamera.SetActive(false);
-                firstCamera.SetActive(true);
-                print("Set to First Person");
-                break;
-            case 1:
-                firstCamera.SetActive(false);
-                thirdCamera.SetActive(true);
-                print("Set to Third Person");
-                break;
-        }
+    SkinnedMeshRenderer headRend = headMesh.GetComponent<SkinnedMeshRenderer>();
+    SkinnedMeshRenderer shirtRend = shirtMesh.GetComponent<SkinnedMeshRenderer>();
+
+    switch(camMode){
+        case 0:
+            thirdCamera.SetActive(false);
+            firstCamera.SetActive(true);
+
+            headRend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+            shirtRend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+
+            print("Set to First Person");
+            break;
+        case 1:
+            firstCamera.SetActive(false);
+            thirdCamera.SetActive(true);
+
+            headRend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            shirtRend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+
+            print("Set to Third Person");
+            break;
     }
+}
+
 
     //Takes in value isEnter to determine if it is zooming in or out
     //doesn't currently work in 3rd person
