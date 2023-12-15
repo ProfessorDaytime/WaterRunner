@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random=UnityEngine.Random;
+using TMPro;
 using System;
 
 public class FirstPersonController : MonoBehaviour
@@ -129,7 +130,8 @@ public class FirstPersonController : MonoBehaviour
 
 
     [Header("UI Parameters")]
-    [SerializeField] private string contextText;
+    [SerializeField] private TextMeshProUGUI contextText = default;
+    // [SerializeField] private string contextText;
     public static Action<string> OnContext;
 
     
@@ -411,6 +413,10 @@ public class FirstPersonController : MonoBehaviour
             // print("Wall In Front");
 
             if(isClimbing){
+
+                if(contextText.text == "press R to climb"){
+                        contextText.text = "";
+                }
                 
 
                 transform.forward = Vector3.Lerp(transform.forward, -hit.normal, 10f * Time.fixedDeltaTime);
@@ -439,7 +445,7 @@ public class FirstPersonController : MonoBehaviour
                         RaycastHit diagDownHit;
                         if(Physics.Raycast(transform.position + new Vector3(0, 1.5f, 0), -checkDirection + new Vector3(0,-0.66f,0), out diagDownHit, 1f)){
                             Debug.DrawRay(transform.position + new Vector3(0, 1.5f, 0), -checkDirection + new Vector3(0,-0.66f,0), Color.cyan,3);
-                            print(v);
+                            // print(v);
                             if(v >= 0.25f){
                                 transform.position += new Vector3(0,2,1.5f);
                                 isClimbing = false;
@@ -463,8 +469,12 @@ public class FirstPersonController : MonoBehaviour
                     characterController.enabled = true;
                 }
             } else{
+                // contextText.text = "press R to climb";
                 if(Input.GetKeyDown(climbKey)){
                     isClimbing = true;
+                    if(contextText.text == "press R to climb"){
+                        contextText.text = "";
+                    }
                 }
             }
 
@@ -519,6 +529,10 @@ public class FirstPersonController : MonoBehaviour
 
     private void HandleInteractionCheck(){
         if(Physics.Raycast(playerCamera.ViewportPointToRay(interactionRayPoint), out RaycastHit hit, interactionDistance)){
+
+            if(hit.collider.gameObject.tag == "Climb" && !isClimbing){
+                contextText.text = "press R to climb";
+            }
             if(hit.collider.gameObject.layer == 9 && (curInteractable == null || hit.collider.gameObject.GetInstanceID() != curInteractable.GetInstanceID())){
                 hit.collider.TryGetComponent(out curInteractable);
 
